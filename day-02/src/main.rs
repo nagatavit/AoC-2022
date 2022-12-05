@@ -2,12 +2,11 @@ use std::fs::File;
 use std::io::{self, BufRead};
 use std::path::Path;
 
-#[derive(PartialEq, Eq)]
+#[derive(PartialEq, Eq, Copy, Clone)]
 enum RPS {
     Rock,
     Paper,
     Scissors,
-    Invalid,
 }
 
 fn decipher_rps(input: char) -> RPS {
@@ -18,7 +17,7 @@ fn decipher_rps(input: char) -> RPS {
         'X' => RPS::Rock,
         'Y' => RPS::Paper,
         'Z' => RPS::Scissors,
-        _ => RPS::Invalid,
+        _ => RPS::Rock,
     }
 }
 
@@ -27,13 +26,12 @@ fn rps_shape_value(input: RPS) -> u32 {
         RPS::Rock => 1,
         RPS::Paper => 2,
         RPS::Scissors => 3,
-        RPS::Invalid => 0,
     }
 }
 
 fn check_b_score(a: RPS, b: RPS) -> u32 {
     if b == a {
-        return 3;
+        3
     } else if b == RPS::Rock {
         match a {
             RPS::Paper => 0,
@@ -56,6 +54,35 @@ fn check_b_score(a: RPS, b: RPS) -> u32 {
     }
 }
 
+fn get_winner(a: RPS) -> RPS {
+    match a {
+        RPS::Rock => RPS::Paper,
+        RPS::Paper => RPS::Scissors,
+        RPS::Scissors => RPS::Rock,
+    }
+}
+
+fn get_loser(a: RPS) -> RPS {
+    match a {
+        RPS::Rock => RPS::Scissors,
+        RPS::Paper => RPS::Rock,
+        RPS::Scissors => RPS::Paper,
+    }
+}
+
+fn get_draw(a: RPS) -> RPS {
+    a
+}
+
+fn get_play(input: char, opponent: RPS) -> RPS {
+    match input {
+        'X' => get_loser(opponent),
+        'Y' => get_draw(opponent),
+        'Z' => get_winner(opponent),
+        _ => RPS::Rock,
+    }
+}
+
 fn main() {
     // File hosts must exist in current path before this produces output
     let lines = match read_lines("src/input") {
@@ -68,8 +95,10 @@ fn main() {
     for line in lines {
         if let Ok(reading) = line {
             let letters: Vec<char> = reading.chars().collect();
-            partial_score += check_b_score(decipher_rps(letters[0]), decipher_rps(letters[2]));
-            partial_score += rps_shape_value(decipher_rps(letters[2]));
+            let my_play = get_play(letters[2], decipher_rps(letters[0]));
+
+            partial_score += check_b_score(decipher_rps(letters[0]), my_play);
+            partial_score += rps_shape_value(my_play);
         }
     }
 
