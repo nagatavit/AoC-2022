@@ -14,7 +14,8 @@ fn main() {
         _ => return,
     };
 
-    let mut overlap_counter = 0;
+    let mut union_counter = 0;
+    let mut intersection_counter = 0;
 
     for line in lines {
         if let Ok(reading) = line {
@@ -37,12 +38,21 @@ fn main() {
             if (elf1.lower_bound <= elf2.lower_bound && elf1.upper_bound >= elf2.upper_bound)
                 || (elf2.lower_bound <= elf1.lower_bound && elf2.upper_bound >= elf1.upper_bound)
             {
-                overlap_counter += 1;
+                union_counter += 1;
+            }
+
+            if (elf1.upper_bound >= elf2.lower_bound && elf1.lower_bound <= elf2.lower_bound)
+                || (elf2.upper_bound >= elf1.lower_bound && elf2.lower_bound <= elf1.lower_bound)
+                || (elf1.lower_bound <= elf2.lower_bound && elf1.upper_bound >= elf2.upper_bound)
+                || (elf2.lower_bound <= elf1.lower_bound && elf2.upper_bound >= elf1.upper_bound)
+            {
+                intersection_counter += 1;
             }
         }
     }
 
-    println!("{}", overlap_counter);
+    println!("U: {}", union_counter);
+    println!("I: {}", intersection_counter);
 }
 
 // The output is wrapped in a Result to allow matching on errors
