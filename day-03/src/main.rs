@@ -9,15 +9,17 @@ fn main() {
         _ => return,
     };
 
-    let mut item_types: [bool; 52] = [false; 52];
+    let mut item_types: [u8; 52] = [0; 52];
     let mut duplicated_already_found: [bool; 52] = [false; 52];
     let mut priority_sum: u32 = 0;
+
+    let mut line_count = 1;
 
     for line in lines {
         if let Ok(reading) = line {
             let bytes = reading.as_bytes();
 
-            for (i, c) in bytes.iter().enumerate() {
+            for (_i, c) in bytes.iter().enumerate() {
                 let mut shifted_pos: u32 = *c as u32;
 
                 if *c as u32 >= 97 {
@@ -26,24 +28,28 @@ fn main() {
                     shifted_pos -= 39;
                 }
 
-                if i < reading.len() / 2 {
-                    item_types[shifted_pos as usize] = true;
-                } else if item_types[shifted_pos as usize]
-                    && !duplicated_already_found[shifted_pos as usize]
-                {
+                if !duplicated_already_found[shifted_pos as usize] {
+                    item_types[shifted_pos as usize] += 1;
                     duplicated_already_found[shifted_pos as usize] = true;
-                    priority_sum += shifted_pos + 1;
+
+                    if item_types[shifted_pos as usize] == 3 {
+                        priority_sum += shifted_pos + 1;
+                    }
                 }
             }
-        }
-
-        for elem in item_types.iter_mut() {
-            *elem = false;
         }
 
         for elem in duplicated_already_found.iter_mut() {
             *elem = false;
         }
+
+        if (line_count % 3) == 0 {
+            for elem in item_types.iter_mut() {
+                *elem = 0;
+            }
+        }
+
+        line_count += 1;
     }
 
     println!("{}", priority_sum);
