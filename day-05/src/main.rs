@@ -44,8 +44,21 @@ fn main() {
                 let origin: u32 = instructions[3].parse::<u32>().unwrap() - 1;
                 let destiny: u32 = instructions[5].parse::<u32>().unwrap() - 1;
 
+                // part 1
+                // for _i in 0..iterations {
+                //     let object_crate = pilar_list[origin as usize].pop().unwrap();
+                //     pilar_list[destiny as usize].push(object_crate);
+                // }
+
+                // part 2
+                let mut tmp_crate_holder: Vec<char> = Vec::new();
                 for _i in 0..iterations {
                     let object_crate = pilar_list[origin as usize].pop().unwrap();
+                    tmp_crate_holder.push(object_crate);
+                }
+
+                for _i in 0..iterations {
+                    let object_crate = tmp_crate_holder.pop().unwrap();
                     pilar_list[destiny as usize].push(object_crate);
                 }
             }
