@@ -36,54 +36,83 @@ fn main() {
     let mut max_map_down_up: Vec<Vec<i32>> = Vec::new();
     let mut max_map_right_left: Vec<Vec<i32>> = Vec::new();
 
-    // let row_len = tree_map.len();
-    // let col_len = tree_map[0].len();
+    let mut last_seen: Vec<[usize; 10]> = Vec::new();
+    for _i in 0..tree_map.len() {
+        last_seen.push([0; 10]);
+    }
 
     // up->down
     fill_max_matrix(&tree_map, &mut max_map_up_down);
-    for row in 1..max_map_up_down.len() {
+    for row in 0..max_map_up_down.len() {
         for col in 0..max_map_up_down[0].len() {
-            if tree_map[row - 1][col] as i32 >= max_map_up_down[row - 1][col] {
-                max_map_up_down[row][col] = tree_map[row - 1][col] as i32;
-            } else {
-                max_map_up_down[row][col] = max_map_up_down[row - 1][col];
+            let mut min_dist: usize = max_map_up_down.len();
+            for search_last_biggest in tree_map[row][col]..10 {
+                if (row - last_seen[col][search_last_biggest as usize]) <= min_dist {
+                    min_dist = row - last_seen[col][search_last_biggest as usize];
+                }
             }
+            max_map_up_down[row][col] = min_dist as i32;
+            last_seen[col][tree_map[row][col] as usize] = row;
         }
+    }
+
+    let mut last_seen: Vec<[usize; 10]> = Vec::new();
+    for _i in 0..tree_map[0].len() {
+        last_seen.push([0; 10]);
     }
 
     // left->right
     fill_max_matrix(&tree_map, &mut max_map_left_right);
-    for col in 1..max_map_left_right[0].len() {
+    for col in 0..max_map_left_right[0].len() {
         for row in 0..max_map_left_right.len() {
-            if tree_map[row][col - 1] as i32 >= max_map_left_right[row][col - 1] {
-                max_map_left_right[row][col] = tree_map[row][col - 1] as i32;
-            } else {
-                max_map_left_right[row][col] = max_map_left_right[row][col - 1];
+            let mut min_dist: usize = max_map_left_right[0].len();
+            for search_last_biggest in tree_map[row][col]..10 {
+                if (col - last_seen[row][search_last_biggest as usize]) <= min_dist {
+                    min_dist = col - last_seen[row][search_last_biggest as usize];
+                }
             }
+            max_map_left_right[row][col] = min_dist as i32;
+            last_seen[row][tree_map[row][col] as usize] = col;
         }
+    }
+
+    let mut last_seen: Vec<[usize; 10]> = Vec::new();
+    for _i in 0..tree_map.len() {
+        last_seen.push([tree_map[0].len() - 1; 10]);
     }
 
     // down->up
     fill_max_matrix(&tree_map, &mut max_map_down_up);
     for row in (0..(max_map_down_up.len() - 1)).rev() {
         for col in 0..max_map_down_up[0].len() {
-            if tree_map[row + 1][col] as i32 >= max_map_down_up[row + 1][col] {
-                max_map_down_up[row][col] = tree_map[row + 1][col] as i32;
-            } else {
-                max_map_down_up[row][col] = max_map_down_up[row + 1][col];
+            let mut min_dist: usize = max_map_down_up.len();
+            for search_last_biggest in tree_map[row][col]..10 {
+                if (last_seen[col][search_last_biggest as usize] - row) <= min_dist {
+                    min_dist = last_seen[col][search_last_biggest as usize] - row;
+                }
             }
+            max_map_down_up[row][col] = min_dist as i32;
+            last_seen[col][tree_map[row][col] as usize] = row;
         }
+    }
+
+    let mut last_seen: Vec<[usize; 10]> = Vec::new();
+    for _i in 0..tree_map[0].len() {
+        last_seen.push([tree_map.len() - 1; 10]);
     }
 
     // right->left
     fill_max_matrix(&tree_map, &mut max_map_right_left);
     for col in (0..(max_map_right_left[0].len() - 1)).rev() {
         for row in 0..max_map_right_left.len() {
-            if tree_map[row][col + 1] as i32 >= max_map_right_left[row][col + 1] {
-                max_map_right_left[row][col] = tree_map[row][col + 1] as i32;
-            } else {
-                max_map_right_left[row][col] = max_map_right_left[row][col + 1];
+            let mut min_dist: usize = max_map_right_left[0].len();
+            for search_last_biggest in tree_map[row][col]..10 {
+                if (last_seen[row][search_last_biggest as usize] - col) <= min_dist {
+                    min_dist = last_seen[row][search_last_biggest as usize] - col;
+                }
             }
+            max_map_right_left[row][col] = min_dist as i32;
+            last_seen[row][tree_map[row][col] as usize] = col;
         }
     }
 
@@ -104,28 +133,27 @@ fn main() {
     //     println!("{:?}", row);
     // }
 
-    let mut visible_trees = 0;
+    let mut best_scenic_score = 0;
     for row in 0..tree_map.len() {
         for col in 0..tree_map[0].len() {
-            let current_tree = tree_map[row][col];
-            if current_tree as i32 > max_map_up_down[row][col]
-                || current_tree as i32 > max_map_left_right[row][col]
-                || current_tree as i32 > max_map_down_up[row][col]
-                || current_tree as i32 > max_map_right_left[row][col]
-            {
-                visible_trees += 1
+            let current_scenic_score = max_map_up_down[row][col]
+                * max_map_left_right[row][col]
+                * max_map_down_up[row][col]
+                * max_map_right_left[row][col];
+            if current_scenic_score > best_scenic_score {
+                best_scenic_score = current_scenic_score;
             }
         }
     }
 
-    println!("Visible trees: {}", visible_trees);
+    println!("Best scenic: {}", best_scenic_score);
 }
 
 fn fill_max_matrix(tree_map: &Vec<Vec<u8>>, max_map: &mut Vec<Vec<i32>>) {
     *max_map = Vec::new();
 
     for row in tree_map {
-        let max_map_row = vec![-1; row.len()];
+        let max_map_row = vec![0; row.len()];
         max_map.push(max_map_row);
     }
 }
