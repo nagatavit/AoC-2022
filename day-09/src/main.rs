@@ -55,40 +55,43 @@ fn main() {
         }
     }
 
-    let mut tail = Coordinate { x: 0, y: 0 };
-    let mut head = Coordinate { x: 0, y: 0 };
+    // head will be the index zero
+    let mut knots: Vec<Coordinate> = vec![Coordinate { x: 0, y: 0 }; 10];
 
     for movement in head_movements {
         for _ in 0..movement.times {
             match movement.dir {
-                Direction::Up => head.y += 1,
-                Direction::Down => head.y -= 1,
-                Direction::Left => head.x -= 1,
-                Direction::Right => head.x += 1,
+                Direction::Up => knots[0].y += 1,
+                Direction::Down => knots[0].y -= 1,
+                Direction::Left => knots[0].x -= 1,
+                Direction::Right => knots[0].x += 1,
             }
 
-            if (head.y - tail.y).abs() == 2 || (head.x - tail.x).abs() == 2 {
-                if head.y == tail.y {
-                    tail.x = (head.x + tail.x) / 2;
-                } else if head.x == tail.x {
-                    tail.y = (head.y + tail.y) / 2;
-                } else {
-                    if head.x > tail.x {
-                        tail.x += 1;
+            for i in 1..knots.len() {
+                if (knots[i - 1].y - knots[i].y).abs() == 2
+                    || (knots[i - 1].x - knots[i].x).abs() == 2
+                {
+                    if knots[i - 1].y == knots[i].y {
+                        knots[i].x = (knots[i - 1].x + knots[i].x) / 2;
+                    } else if knots[i - 1].x == knots[i].x {
+                        knots[i].y = (knots[i - 1].y + knots[i].y) / 2;
                     } else {
-                        tail.x -= 1;
-                    }
+                        if knots[i - 1].x > knots[i].x {
+                            knots[i].x += 1;
+                        } else {
+                            knots[i].x -= 1;
+                        }
 
-                    if head.y > tail.y {
-                        tail.y += 1;
-                    } else {
-                        tail.y -= 1;
+                        if knots[i - 1].y > knots[i].y {
+                            knots[i].y += 1;
+                        } else {
+                            knots[i].y -= 1;
+                        }
                     }
                 }
             }
-            visited_spots.insert(tail, true);
 
-            // println!("{}, {}", &tail.x, &tail.y);
+            visited_spots.insert(knots[9], true);
         }
     }
 
