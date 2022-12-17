@@ -4,13 +4,13 @@ use std::path::Path;
 
 #[derive(Debug)]
 struct Monkey {
-    items: Vec<u32>,
-    id: u32,
+    items: Vec<u64>,
+    id: u64,
     op: Operation,
     operands: (String, String),
-    divisible_by_test: u32,
-    true_condition_monkey: u32,
-    false_condition_monkey: u32,
+    divisible_by_test: u64,
+    true_condition_monkey: u64,
+    false_condition_monkey: u64,
 }
 
 impl Monkey {
@@ -21,7 +21,7 @@ impl Monkey {
             if self.operands.0 == "old" {
                 op1 = *item
             } else {
-                op1 = self.operands.1.parse::<u32>().unwrap();
+                op1 = self.operands.1.parse::<u64>().unwrap();
             }
 
             let mut op2 = 0;
@@ -29,7 +29,7 @@ impl Monkey {
             if self.operands.1 == "old" {
                 op2 = *item
             } else {
-                op2 = self.operands.1.parse::<u32>().unwrap();
+                op2 = self.operands.1.parse::<u64>().unwrap();
             }
 
             *item = match self.op {
@@ -46,7 +46,13 @@ impl Monkey {
         }
     }
 
-    fn send_to_monkey(&self, item: u32) -> u32 {
+    fn crt_worry(&mut self, lcd: u64) {
+        for item in &mut self.items {
+            *item %= lcd;
+        }
+    }
+
+    fn send_to_monkey(&self, item: u64) -> u64 {
         if item % self.divisible_by_test == 0 {
             self.true_condition_monkey
         } else {
@@ -86,7 +92,7 @@ fn main() {
 
             if input[0] == "Monkey" {
                 let id_len = input[1].len() - 1;
-                let id = (&input[1][0..id_len]).parse::<u32>().unwrap();
+                let id = (&input[1][0..id_len]).parse::<u64>().unwrap();
 
                 let new_monkey = Monkey {
                     items: Vec::new(),
@@ -101,7 +107,7 @@ fn main() {
             } else if input[0] == "Starting" {
                 let mut items = Vec::new();
                 for item in &input[2..input.len()] {
-                    let item = item.replace(',', "").parse::<u32>().unwrap();
+                    let item = item.replace(',', "").parse::<u64>().unwrap();
                     items.push(item);
                 }
                 monkeys[monkey_pos].items = items;
@@ -114,9 +120,9 @@ fn main() {
 
                 monkeys[monkey_pos].operands = (input[3].to_string(), input[5].to_string());
             } else if input[0] == "Test:" {
-                monkeys[monkey_pos].divisible_by_test = input[3].parse::<u32>().unwrap();
+                monkeys[monkey_pos].divisible_by_test = input[3].parse::<u64>().unwrap();
             } else if input[0] == "If" {
-                let dst_monkey = input[5].parse::<u32>().unwrap();
+                let dst_monkey = input[5].parse::<u64>().unwrap();
 
                 if input[1] == "true:" {
                     monkeys[monkey_pos].true_condition_monkey = dst_monkey;
@@ -127,10 +133,21 @@ fn main() {
         }
     }
 
-    let mut inspect_count: Vec<u32> = vec![0; monkeys.len()];
+    let mut inspect_count: Vec<u64> = vec![0; monkeys.len()];
+
+    // CRT states that any two solutions, x1 and x2 for the A = x mod
+    // n_i are congruent modulo N, that is, x1 ≡ x2 (mod N) when N is
+    // a multiple of n_i (given n_i are coprime)
+    //
+    // In this case the divisors are all primes, so they are consequently coprimes
+    let mut least_common_divisor: u64 = 1;
+
+    for monkey in &monkeys {
+        least_common_divisor *= monkey.divisible_by_test;
+    }
 
     // Rounds
-    for _id in 0..20 {
+    for _id in 0..10000 {
         // println!("================");
         // println!("Round: {:?}:", id);
         // for monkey in &monkeys {
@@ -138,10 +155,14 @@ fn main() {
         // }
 
         for monkey_idx in 0..monkeys.len() {
-            inspect_count[monkey_idx] += monkeys[monkey_idx].items.len() as u32;
+            inspect_count[monkey_idx] += monkeys[monkey_idx].items.len() as u64;
 
             monkeys[monkey_idx].inspect();
-            monkeys[monkey_idx].reduce_worry();
+            // part 1
+            // monkeys[monkey_idx].reduce_worry();
+
+            // part 2
+            monkeys[monkey_idx].crt_worry(least_common_divisor);
 
             let items = monkeys[monkey_idx].items.clone();
             for item in items {
@@ -152,7 +173,7 @@ fn main() {
         }
     }
 
-    println!("inspect counts: {:?}", inspect_count);
+    // println!("inspect counts: {:?}", inspect_count);
 
     inspect_count.sort();
 
