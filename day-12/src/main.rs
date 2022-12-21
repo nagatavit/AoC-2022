@@ -175,6 +175,11 @@ fn main() {
         }
     }
 
+    // for part 2 swap the end position will now be the start (and the
+    // end is not actually defined already)
+
+    start_point = end_point;
+
     println!("Start: {:?}, End: {:?}", start_point, end_point);
 
     let mut visited_places: HashMap<Coordinate, u32> = HashMap::new();
@@ -205,7 +210,14 @@ fn main() {
 
         visited_places.insert(current_coord, current_cost);
 
-        if current_coord == end_point {
+        // part 1
+        // if current_coord == end_point {
+        //     min_path_cost = current_cost;
+        //     break;
+        // }
+
+        // part 2
+        if height_map[current_coord.0][current_coord.1] == 0 {
             min_path_cost = current_cost;
             break;
         }
@@ -227,10 +239,13 @@ fn main() {
             let i = i as usize;
             let j = j as usize;
 
+            // Changed the last condition for part 2
+            // for part 1 it should instead be:
+            // height_map[i][j] as i32 - current_height as i32 > 1
             if i >= height_map.len()
                 || j >= height_map[0].len()
                 || visited_places.contains_key(&Coordinate(i, j))
-                || height_map[i][j] as i32 - current_height as i32 > 1
+                || current_height as i32 - height_map[i][j] as i32 > 1
             {
                 continue;
             }
