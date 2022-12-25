@@ -24,6 +24,7 @@ impl Sand {
         &mut self,
         cave_mapping: &mut HashMap<Coordinate, TerrainType>,
         lowest_point: usize,
+        add_floor: bool, // floor for part 2
     ) -> bool {
         loop {
             let mut down = self.coord;
@@ -48,8 +49,13 @@ impl Sand {
                 return false;
             }
 
-            if self.coord.1 > lowest_point {
-                return true;
+            if !add_floor {
+                if self.coord.1 > lowest_point {
+                    return true;
+                }
+            } else if down.1 == lowest_point + 1 {
+                cave_mapping.insert(self.coord, TerrainType::Sand);
+                return false;
             }
         }
     }
@@ -66,8 +72,8 @@ fn main() {
     };
 
     let mut cave_mapping: HashMap<Coordinate, TerrainType> = HashMap::new();
-    let mut top_left: (usize, usize) = (usize::MAX, usize::MAX);
-    let mut bottom_right: (usize, usize) = (0, 0);
+    let mut top_left: Coordinate = Coordinate(usize::MAX, usize::MAX);
+    let mut bottom_right: Coordinate = Coordinate(0, 0);
 
     for line in lines {
         if let Ok(reading) = line {
@@ -81,18 +87,7 @@ fn main() {
                 let x = coords[0].parse::<usize>().unwrap();
                 let y = coords[1].parse::<usize>().unwrap();
 
-                if x < top_left.0 {
-                    top_left.0 = x;
-                }
-                if x > bottom_right.0 {
-                    bottom_right.0 = x;
-                }
-                if y < top_left.1 {
-                    top_left.1 = y;
-                }
-                if y > bottom_right.1 {
-                    bottom_right.1 = y;
-                }
+                update_map_corners(&Coordinate(x, y), &mut top_left, &mut bottom_right);
 
                 line_segments.push(Coordinate(x, y));
             }
@@ -108,18 +103,9 @@ fn main() {
         }
     }
 
-    // println!("{:?} {:?}", top_left, bottom_right);
+    println!("{:?} {:?}", top_left, bottom_right);
 
-    // for i in top_left.1..=bottom_right.1 {
-    //     for j in top_left.0..=bottom_right.0 {
-    //         if cave_mapping.contains_key(&Coordinate(j, i)) {
-    //             print!("#");
-    //         } else {
-    //             print!(".");
-    //         }
-    //     }
-    //     println!();
-    // }
+    // print_map(&cave_mapping, &top_left, &bottom_right);
 
     let sand_start_point = Coordinate(500, 0);
     let mut sand_count = 0;
@@ -129,14 +115,81 @@ fn main() {
             coord: sand_start_point,
         };
 
-        if new_sand.drop(&mut cave_mapping, bottom_right.1) {
+        if new_sand.drop(&mut cave_mapping, bottom_right.1, false) {
             break;
         }
 
         sand_count += 1;
     }
 
-    println!("{:?}", sand_count);
+    // print_map(&cave_mapping, &top_left, &bottom_right);
+
+    println!("Part 1: {:?}", sand_count);
+
+    // creating a new var here just so I can print the result later
+    let lowest_point = bottom_right.1;
+
+    loop {
+        let mut new_sand = Sand {
+            coord: sand_start_point,
+        };
+
+        new_sand.drop(&mut cave_mapping, lowest_point, true);
+
+        update_map_corners(&new_sand.coord, &mut top_left, &mut bottom_right);
+
+        if new_sand.coord == sand_start_point {
+            break;
+        }
+
+        sand_count += 1;
+    }
+
+    // print_map(&cave_mapping, &top_left, &bottom_right);
+
+    // +1 cause one sand gets dropped after the first part
+    println!("Part 2: {:?}", sand_count + 1);
+}
+
+fn update_map_corners(
+    new_coord: &Coordinate,
+    top_left: &mut Coordinate,
+    bottom_right: &mut Coordinate,
+) {
+    if new_coord.0 < top_left.0 {
+        top_left.0 = new_coord.0;
+    }
+    if new_coord.0 > bottom_right.0 {
+        bottom_right.0 = new_coord.0;
+    }
+    if new_coord.1 < top_left.1 {
+        top_left.1 = new_coord.1;
+    }
+    if new_coord.1 > bottom_right.1 {
+        bottom_right.1 = new_coord.1;
+    }
+}
+
+fn print_map(
+    cave_mapping: &HashMap<Coordinate, TerrainType>,
+    top_left: &Coordinate,
+    bottom_right: &Coordinate,
+) {
+    for i in top_left.1..=bottom_right.1 {
+        for j in top_left.0..=bottom_right.0 {
+            if cave_mapping.contains_key(&Coordinate(j, i)) {
+                let value = cave_mapping.get(&Coordinate(j, i)).unwrap();
+                if *value == TerrainType::Rock {
+                    print!("#");
+                } else {
+                    print!("o");
+                }
+            } else {
+                print!(".");
+            }
+        }
+        println!();
+    }
 }
 
 fn fill_cave_mapping(
